@@ -1,13 +1,23 @@
 import java.io.*;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+
+class TvSpot {
+    String id;
+    Integer count;
+
+    TvSpot(String id, Integer count) {
+        this.id = id;
+        this.count = count;
+    }
+}
 
 public class TvSpotViewerCalculator {
-    private static HashMap<LocalDateTime, String> tvSpots = new HashMap<>();
-    private static HashMap<LocalDateTime, Integer> users = new HashMap<>();
-    private static HashMap<LocalDateTime, Integer> viewCountByTvSpot = new HashMap<>();
+    private static LinkedHashMap<LocalDateTime, Integer> users = new LinkedHashMap<>();
+    private static LinkedHashMap<LocalDateTime, TvSpot> viewCountByTvSpot = new LinkedHashMap<>();
 
     private static final String TIME = "\"time\"";
+    private static final String NEW_USER = "\"newUsers\"";
 
     private static void recordTvSpots(String timeLine, String idLine) {
         String dateInString = timeLine.split("\"")[3];
@@ -15,8 +25,8 @@ public class TvSpotViewerCalculator {
 
         LocalDateTime date = LocalDateTime.parse(dateInString);
 
-        tvSpots.put(date, tvSpotId);
-        viewCountByTvSpot.put(date, 0);
+        TvSpot tvSpot = new TvSpot(tvSpotId, 0);
+        viewCountByTvSpot.put(date, tvSpot);
     }
 
     private static void recordUsers(String line) {
@@ -45,12 +55,13 @@ public class TvSpotViewerCalculator {
                 if (userCount != null) newUsers += userCount;
             }
 
-            viewCountByTvSpot.put(key, newUsers - averageUsers);
+            value.count = newUsers - averageUsers;
+            viewCountByTvSpot.put(key, value);
         });
     }
 
     private static void printViewCount() {
-        viewCountByTvSpot.forEach((key, value) -> System.out.println("Spot" + tvSpots.get(key) + ": " + value + " new users"));
+        viewCountByTvSpot.forEach((key, value) -> System.out.println("Spot" + value.id + ": " + value.count + " new users"));
     }
 
     public static void main(String[] args) throws IOException {
@@ -59,7 +70,7 @@ public class TvSpotViewerCalculator {
 
         // Reads the file from resources
         InputStream inputStream = TvSpotViewerCalculator.class
-                .getClassLoader().getResourceAsStream("new_users.json");
+                .getClassLoader().getResourceAsStream("new_users_large_set.json");
         assert inputStream != null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -69,7 +80,7 @@ public class TvSpotViewerCalculator {
             line = line.strip();
 
             // switches to record users;
-            if (line.startsWith("\"newUsers\"")) newUserSwitch = true;
+            if (line.startsWith(NEW_USER)) newUserSwitch = true;
 
             if (line.startsWith(TIME))
                 if (!newUserSwitch) recordTvSpots(line, reader.readLine().strip());
