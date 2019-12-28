@@ -35,16 +35,15 @@ public class TvSpotViewerCalculator {
             Integer averageUsers = 0;
             Integer newUsers = 0;
 
-            for (int i = 0; i < 10; i++) {
+            for (int i = 1; i <= 10; i++) {
                 // calculates sum of users from the past 10 minutes
                 Integer userCount = users.get(key.minusMinutes(i));
                 if (userCount != null) averageUsers +=userCount;
 
                 // calculates sum of viewers from the next 10 minutes;
-                userCount = users.get(key.plusMinutes(i));
+                userCount = users.get(key.plusMinutes(i - 1));
                 if (userCount != null) newUsers += userCount;
             }
-
 
             viewCountByTvSpot.put(key, newUsers - averageUsers);
         });
@@ -60,7 +59,7 @@ public class TvSpotViewerCalculator {
 
         // Reads the file from resources
         InputStream inputStream = TvSpotViewerCalculator.class
-                .getClassLoader().getResourceAsStream("new_users_large_set.json");
+                .getClassLoader().getResourceAsStream("new_users.json");
         assert inputStream != null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
